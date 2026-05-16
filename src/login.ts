@@ -1,5 +1,6 @@
 import type { AuthSession, Credentials } from "./types.js";
 import { left, right, type Either } from "./either.js"; 
+import { HttpLoginError, InvalidCredentialsError } from "./errors.js";
 
 export type LoginRequest = {
   session: {
@@ -9,7 +10,9 @@ export type LoginRequest = {
 }
 
 export type RawLoginResponse = {
-  orbit_session_token: string;
+  orbit_session_token?: string;
+  orbit_api_key?: string;
+  user_id?: string;
 }
 
 export type LoginError =
@@ -39,18 +42,40 @@ export const login = async (
     const resp = await sendLoginRequest(loginRequest)
     const session = toAuthSession(resp)
     return right(session)
-  } catch {
+  } catch(error) {
+    if (error instanceof InvalidCredentialsError) {
+      return left({ type: "InvalidCredentials"})
+    }
+
+    if (error instanceof HttpLoginError) {
       return left({
         type: "NetworkError", 
         message: "login request failed",
       })
-  }
+    }
 
+    if (error instanceof Error && error.message === "login response did not include a token") {
+      return left({
+        type: "UnexpectedResponse",
+        message: error.message
+      })
+    }
+
+    return left({
+      type: "NetworkError",
+      message: "login request failed"
+    })
+  }
 }
 
 export const toAuthSession = (raw: RawLoginResponse): AuthSession => {
+  const token = raw.orbit_session_token ?? raw.orbit_api_key
+  if (!token) {
+    throw new Error("login response did not include a token");
+  }
+
   return {
-    token: raw.orbit_session_token,
+    token
   }
 }
 
