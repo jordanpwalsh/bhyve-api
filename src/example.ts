@@ -3,9 +3,17 @@ import {login } from "./login.js"
 import type { Credentials } from "./types.js"
 import { sendLoginRequest } from './bhyve-api.js'
 
+
+const email = process.env.BHYVE_EMAIL;
+const password = process.env.BHYVE_PASSWORD;
+
+if (!email || !password) {
+  throw new Error("Environment variables BHYVE_EMAIL and BHYVE_PASSWORD must be set");
+}
+
 const credentials: Credentials = {
-  email: "test@example.com",
-  password: "secret"
+  email: email,
+  password: password
 };
 
 const result = await login(sendLoginRequest, credentials)
