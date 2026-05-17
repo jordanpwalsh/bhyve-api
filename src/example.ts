@@ -2,6 +2,7 @@ import {matchEither} from "./either.js"
 import {login } from "./login.js"
 import type { Credentials } from "./types.js"
 import { sendLoginRequest } from './bhyve-api.js'
+import { getDevices } from "./devices.js";
 
 
 const email = process.env.BHYVE_EMAIL;
@@ -18,10 +19,13 @@ const credentials: Credentials = {
 
 const result = await login(sendLoginRequest, credentials)
 
-const message = matchEither(
+const message = await matchEither(
   result,
-  (error) => `login failed: ${error.type}`,
-  (session) => `login succeeded: ${session.token}`
+  (error) => Promise.resolve(`login failed: ${error.type}`),
+  async (session) => { 
+    const devices = await getDevices(session)
+    return `login succeeded: ${session.token}, found ${devices.length} devices`
+  }
 );
 
 console.log(`Message is: ${message}`)

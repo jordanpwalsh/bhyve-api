@@ -4,6 +4,7 @@ import type { AuthSession, Device, RawDevice, RawDeviceResponse, Zone } from "./
 export const getDevices = async (session: AuthSession ):Promise<Device[]> => {
   const request = createRequest(session);
   const raw = await request("/v1/devices");
+  console.log("DEBUG raw response:", JSON.stringify(raw,null,2))
   return rawDevicesToDevices(raw as RawDeviceResponse)
 }
 
