@@ -7,10 +7,12 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "check": "tsc --noEmit",
+    "test": "node --import tsx --test src/**/*.test.ts"
   },
   "devDependencies": {
     "@types/node": "^25.8.0",
+    "tsx": "^4.22.1",
     "typescript": "^6.0.3"
   }
 }
