@@ -1,7 +1,7 @@
 import test from "node:test"
 import assert from "node:assert/strict"
 
-import { rawToDevice, rawDevicesToDevices, rawToZone } from "./devices.js"
+import { rawToDevice, rawDevicesToDevices, rawToZone, getDevices } from "./devices.js"
 
 test("rawToDevice maps the basic device fields", () => {
   const device = rawToDevice({
@@ -32,7 +32,7 @@ test("rawToDevice supplies defaults for missing fields", () => {
     smart_watering_enabled: false,
   })
 })
-  
+
 
 test("rawDevicesToDevices returns an empty list when devices is missing", () => {
   assert.deepEqual(rawDevicesToDevices({}),[])
@@ -58,5 +58,33 @@ test("rawToDevice maps nested zones", () => {
       name: "Unknown zone",
       smart_watering_enabled: false
     }
+  ])
+})
+
+test("getDevices maps raw devices from the injected request", async () => {
+  const fakeSendDevicesRequest = async () => {
+    return {
+      devices: [
+        {
+          id: "abc",
+          name: "Front Yard",
+          device_type: "timer",
+          smart_watering_enabled: true,
+          zones: [{station: 1, name: "Grass", smart_watering_enabled: false }],
+        }
+      ]
+    }
+  }
+
+  const devices = await getDevices(fakeSendDevicesRequest)
+  assert.deepEqual(devices, [
+    {
+      id: "abc",
+      name: "Front Yard",
+      device_type: "timer",
+      smart_watering_enabled: true,
+      zones: [{ station: 1, name: "Grass",
+      smart_watering_enabled: false }],
+    },
   ])
 })

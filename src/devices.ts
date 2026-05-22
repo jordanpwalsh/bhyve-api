@@ -1,6 +1,3 @@
-import { createRequest } from "./bhyve-api.js"
-import type { AuthSession } from "./types.js"
-
 
 export type Zone = {
   station: number;
@@ -34,10 +31,11 @@ export type RawDevice = Record<string, unknown> & {
 export type RawDeviceResponse = {
   devices?: RawDevice[];
 }
-export const getDevices = async (session: AuthSession ):Promise<Device[]> => {
-  const request = createRequest(session);
-  const raw = await request("/v1/devices");
-  console.log("DEBUG raw response:", JSON.stringify(raw,null,2))
+
+export type SendDevicesRequest = () => Promise<RawDeviceResponse>
+
+export const getDevices = async (sendDevicesRequest: SendDevicesRequest):Promise<Device[]> => {
+  const raw = await sendDevicesRequest()
   return rawDevicesToDevices(raw as RawDeviceResponse)
 }
 
