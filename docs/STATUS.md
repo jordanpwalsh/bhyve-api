@@ -1,140 +1,94 @@
-Use this shorter handoff/status version:
-
-```md
 # B-hyve FP Status
 
 ## Goal
 
-Build a TypeScript B-hyve library while learning FP step by step.
+Build a TypeScript B-hyve library while learning functional programming step by step.
 
 Current focus:
 
 - pure vs effectful boundaries
 - explicit error handling with `Either`
 - dependency injection for HTTP calls
+- mapping raw B-hyve API data into domain values
 
 ## Completed
 
-- Set up TS project in `src/`
-- Switched project to ESM-style imports
-- Added `.gitignore` for generated TS output
-- Created domain types in `src/types.ts`
-  - `Credentials`
-  - `AuthSession`
-- Created login transport types in `src/login.ts`
-  - `LoginRequest`
-  - `RawLoginResponse`
-  - `LoginError`
-  - `SendLoginRequest`
-- Added pure login helpers in `src/login.ts`
-  - `buildLoginRequest`
-  - `toAuthSession`
+- Set up TypeScript project with ESM imports
+- Added `npm run check` and `npm test`
 - Added local `Either` implementation in `src/either.ts`
-  - `Left`
-  - `Right`
-  - `Either`
-  - `left`
-  - `right`
-  - `matchEither`
-- Implemented `login(sendLoginRequest, credentials)` returning:
-  - `Promise<Either<LoginError, AuthSession>>`
-- Added `src/example.ts` showing:
-  - fake `sendLoginRequest`
-  - call to `login(...)`
-  - consumption via `matchEither(...)`
+- Added login domain and transport modeling
+- Implemented `login(sendLoginRequest, credentials)`
+  - returns `Promise<Either<LoginError, AuthSession>>`
+- Added real login HTTP boundary in `src/bhyve-api.ts`
+- Added authenticated request builder with `createRequest(session)`
+- Added device and zone modeling in `src/devices.ts`
+- Added pure mappers:
+  - `rawToZone`
+  - `rawToDevice`
+  - `rawDevicesToDevices`
+- Added `getDevices(sendDevicesRequest)`
+  - keeps HTTP injected
+  - maps raw response into `Device[]`
+- Added unit tests for device mapping and injected device fetching
 
 ## Current State
 
-Files and roles:
+The repo is green:
+
+- `npm run check` passes
+- `npm test` passes
+- 6 tests pass
+
+Current main files:
 
 - `src/types.ts`
-  - domain types only
-- `src/login.ts`
-  - login transport types
-  - login orchestration
-  - login mapping logic
+  - shared domain types: `Credentials`, `AuthSession`
 - `src/either.ts`
   - local `Either` abstraction
-- `src/example.ts`
-  - demo/composition file
-- `docs/bhyve-api-research.md`
-  - local API research
-
-Current `login(...)` shape:
-
-- injected dependency: `SendLoginRequest`
-- input: `Credentials`
-- output: `Promise<Either<LoginError, AuthSession>>`
-
-Current example is still fake:
-- fake request returns a fake token
-- no real HTTP yet
+- `src/login.ts`
+  - login request/response modeling
+  - login orchestration
+  - login error mapping
+- `src/bhyve-api.ts`
+  - real HTTP functions
+  - effectful API boundary
+- `src/devices.ts`
+  - device/zone types
+  - pure raw-to-domain mapping
+  - injected device fetch orchestration
+- `src/devices.test.ts`
+  - current active learning/test file
 
 ## Important Design Decisions
 
-- Keep domain types separate from API transport types
-- Keep pure transformations separate from effectful HTTP calls
-- Use local `Either` first before introducing `fp-ts` / `TaskEither`
-- `example.ts` is only the composition/demo point, not the long-term home for real HTTP
+- Keep pure transformations separate from HTTP calls
+- Inject effectful dependencies instead of hiding them inside domain logic
+- Use local `Either` before introducing libraries like `fp-ts`
+- Keep API response shapes distinct from nicer library/domain shapes
+- Let tests drive small mapping behavior
 
-## Current Step
+## Current FP Lesson
 
-Move from fake login request to real HTTP login request.
+The project now has the pattern:
 
-We now have local research in:
+1. effectful edge gets raw API data
+2. pure function maps raw data into domain data
+3. orchestration function connects the two
 
-- `docs/bhyve-api-research.md`
+For devices:
 
-Confirmed login endpoint from research:
-
-- `POST https://api.orbitbhyve.com/v1/session`
-
-Observed request body:
-
-```json
-{
-  "session": {
-    "email": "user@example.com",
-    "password": "secret"
-  }
-}
-```
-
-Observed token fields may vary:
-
-- `orbit_session_token`
-- `orbit_api_key`
-
-`user_id` may also be present.
+- `SendDevicesRequest` is the effectful dependency
+- `rawDevicesToDevices(...)` is pure
+- `getDevices(...)` composes them
 
 ## Immediate Next Steps
 
-- Widen `RawLoginResponse` to support:
-  - `orbit_session_token?`
-  - `orbit_api_key?`
-  - `user_id?`
-- Update `toAuthSession(...)` to accept either token field
-- Create real HTTP implementation of `SendLoginRequest`
-  - likely in `src/bhyve-api.ts`
-- Keep `login(...)` as orchestrator
-- Rewire `src/example.ts` to use the real request function instead of the fake one
-
-## Short-Term Followups
-
-- Improve `LoginError` mapping
-  - distinguish network failure
-  - distinguish invalid credentials
-  - distinguish unexpected response shape
-- After real login works, move to authenticated device fetch
-- Consider `TaskEither` later, not now
-
-## Notes For Next Agent
-
-- Keep tutorial/paired-learning style
-- Prefer small explicit steps
-- Do not jump ahead into full library scaffolding
-- Do not introduce `fp-ts` yet unless the user explicitly wants it
-- Real next milestone is successful live login, not broader API coverage
-```
-
-If you want, I can also compress that one more level into a very terse “agent briefing” version.
+- Clean up tiny noise in `src/devices.test.ts`
+  - remove commented duplicate call
+  - remove extra trailing whitespace
+- Decide how device fetch errors should work:
+  - keep `getDevices(...)` as `Promise<Device[]>` for now
+  - or evolve it toward `Promise<Either<DeviceError, Device[]>>`
+- Add tests for malformed or partial device/zone data
+- Consider whether raw validation should stay permissive or become stricter
+- After that, add the next authenticated endpoint only when this pattern feels solid

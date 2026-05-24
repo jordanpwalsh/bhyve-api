@@ -29,21 +29,22 @@ The user wants:
 
 ## Current Project State
 
-The current project root is:
+The project now includes login, authenticated request construction, and the first device-fetching workflow.
 
-- `/Users/jordan/devel/personal/bhyve-api`
-
-The project currently has:
+Current files include:
 
 - `src/types.ts`
+- `src/either.ts`
 - `src/login.ts`
-- `package.json`
-- `tsconfig.json`
-- `.gitignore`
+- `src/bhyve-api.ts`
+- `src/devices.ts`
+- `src/devices.test.ts`
+- `src/example.ts`
 
-TypeScript currently passes with:
+TypeScript and tests currently pass with:
 
-- `tsc --noEmit`
+- `npm run check`
+- `npm test`
 
 ## Current Code Structure
 
@@ -177,48 +178,30 @@ This is the current preferred structure.
 
 ## Current Recommendation
 
-Do not jump into devices, zones, programs, or websockets yet.
+The project has now moved into devices, but in a good small-step way.
 
-Do not build the actual HTTP client yet unless the user explicitly wants that next.
+Stay focused on the same FP pattern:
 
-The current best next topic is:
+1. model raw API data
+2. map raw data with pure functions
+3. inject the effectful HTTP request
+4. test the pure mapping and orchestration separately
 
-- “pure core, effectful edge”
-
-The user has already built the pure transformations. The next teaching step should be to explain how a future `login` workflow would be composed from:
-
-1. pure request building
-2. effectful HTTP call
-3. pure response mapping
-
-Conceptually:
-
-- `Credentials`
-- `buildLoginRequest`
-- `LoginRequest`
-- send HTTP request
-- `RawLoginResponse`
-- `toAuthSession`
-- `AuthSession`
+Do not broaden into programs, watering commands, websockets, or full client architecture yet.
 
 ## Best Next Step
 
-The best next step is not a big implementation.
+Use `src/devices.test.ts` as the current learning surface.
 
-Instead, continue tutorial-first and decide the shape of the future effectful login API.
+Recommended next discussion:
 
-Good next discussion:
+1. Should `getDevices(...)` return plain `Promise<Device[]>`?
+2. Or should it mirror login and return `Promise<Either<DeviceError, Device[]>>`?
+3. What kinds of device API failures are worth modeling explicitly?
+4. Which raw response cases should get defaults, and which should become errors?
 
-1. What should `login` accept?
-2. What should `login` return at first?
-3. Should the first version use plain `Promise<AuthSession>`?
-4. When should explicit FP error modeling be introduced?
+This keeps the next lesson centered on FP error modeling without jumping to a bigger library design.
 
-Recommended pacing:
-
-- start with a simple effectful function signature
-- keep pure transforms separate
-- delay fancier abstractions like `Either` / `TaskEither` until the happy path is clear
 
 ## Suggested Near-Term Direction
 

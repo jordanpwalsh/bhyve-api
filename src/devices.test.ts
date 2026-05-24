@@ -76,7 +76,9 @@ test("getDevices maps raw devices from the injected request", async () => {
     }
   }
 
+  //const devices = await getDevices(fakeSendDevicesRequest)
   const devices = await getDevices(fakeSendDevicesRequest)
+  
   assert.deepEqual(devices, [
     {
       id: "abc",
