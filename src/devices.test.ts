@@ -76,10 +76,11 @@ test("getDevices maps raw devices from the injected request", async () => {
     }
   }
 
-  //const devices = await getDevices(fakeSendDevicesRequest)
   const devices = await getDevices(fakeSendDevicesRequest)
   
-  assert.deepEqual(devices, [
+  assert.deepEqual(devices, {
+    type: "Right",
+    value: [
     {
       id: "abc",
       name: "Front Yard",
@@ -88,5 +89,21 @@ test("getDevices maps raw devices from the injected request", async () => {
       zones: [{ station: 1, name: "Grass",
       smart_watering_enabled: false }],
     },
-  ])
+  ]})
+})
+
+test("getDevices returns a Left when the injected request fails", async () => {
+  const fakeSendDevicesRequest = async () => {
+    throw new Error("boom")
+  }
+
+  const devices = await getDevices(fakeSendDevicesRequest)
+  
+  assert.deepEqual(devices, {
+    type: "Left",
+    value: {
+      type: "NetworkError",
+      message: "device request failed"
+    }
+  })
 })
