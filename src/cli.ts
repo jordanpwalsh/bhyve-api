@@ -22,3 +22,20 @@ export const credentialsFromEnv = (
 
   return right({ email, password })
 }
+
+export const renderCliError = (error: CliError): string => {
+  switch(error.type) {
+    case "MissingCredentials":
+      return "Missing credentials. Set BHYVE_EMAIL and BHYVE_PASSWORD."
+    case "LoginFailed":
+      return "Login failed"
+    case "DeviceFetchFailed": 
+      return `Device fetch failed: ${error.message}`
+    case "DeviceFetchParseFailed": 
+      return `Device respinse was invalid: ${error.message}`
+    case "UnknownCommand":
+      return `Unknown command: ${error.command}`
+  }
+}
+
+
